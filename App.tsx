@@ -409,12 +409,14 @@ const App: React.FC = () => {
               type="text"
               value={manualLocation}
               onChange={(e) => setManualLocation(e.target.value)}
+              aria-label="Manual location"
               placeholder="Enter location manually (optional)"
               className="flex-1 bg-slate-800/80 border border-slate-700 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder:text-slate-500"
             />
             {manualLocationValue && (
               <button
                 onClick={() => setManualLocation('')}
+                aria-label="Clear manual location"
                 className="p-2 text-slate-400 hover:text-white transition-colors"
                 title="Clear manual location"
               >
@@ -436,7 +438,7 @@ const App: React.FC = () => {
               <button onClick={toggleListening} className={`p-2 rounded-xl transition-all ${isListening ? 'text-red-400 bg-red-400/10' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.Mic className="w-4 h-4" />
               </button>
-              <button onClick={handleManualLocationRequest} className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
+              <button onClick={handleManualLocationRequest} aria-label="Use current location" className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.MapPin className="w-4 h-4" />
               </button>
               <button 
