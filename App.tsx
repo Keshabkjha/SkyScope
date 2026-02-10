@@ -14,6 +14,7 @@ const SUGGESTIONS = [
 ];
 
 const STORAGE_KEY = 'skyscope_chat_history';
+const LOCATION_PROMPT_KEY = 'skyscope_location_prompted';
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -196,15 +197,68 @@ const App: React.FC = () => {
     }));
   };
 
-  const requestLocation = () => {
+  const requestLocation = (options?: { silent?: boolean }) => {
+    const { silent = false } = options ?? {};
+    if (!navigator.geolocation) {
+      if (!silent) alert("Geolocation is not supported by this browser.");
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       (p) => {
         const newLoc = { lat: p.coords.latitude, lng: p.coords.longitude };
         setLocation(newLoc);
       },
-      () => alert("Location access denied. Please enable GPS for local weather.")
+      () => {
+        if (!silent) alert("Location access denied. Please enable GPS for local weather.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000
+      }
     );
   };
+
+  useEffect(() => {
+    if (!navigator.geolocation || location) return;
+
+    let cancelled = false;
+
+    const attemptAutoDetect = async () => {
+      const alreadyPrompted = localStorage.getItem(LOCATION_PROMPT_KEY);
+      try {
+        if (navigator.permissions?.query) {
+          const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+          if (cancelled) return;
+
+          if (status.state === 'granted') {
+            requestLocation({ silent: true });
+            return;
+          }
+
+          if (status.state === 'prompt' && !alreadyPrompted) {
+            localStorage.setItem(LOCATION_PROMPT_KEY, 'true');
+            requestLocation({ silent: true });
+          }
+          return;
+        }
+      } catch (e) {
+        console.warn("Unable to check location permissions", e);
+      }
+
+      if (!alreadyPrompted) {
+        localStorage.setItem(LOCATION_PROMPT_KEY, 'true');
+        requestLocation({ silent: true });
+      }
+    };
+
+    attemptAutoDetect();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location]);
 
   const toggleUnit = () => {
     setUnit(prev => prev === 'Celsius' ? 'Fahrenheit' : 'Celsius');
@@ -327,7 +381,7 @@ const App: React.FC = () => {
               <button onClick={toggleListening} className={`p-2 rounded-xl transition-all ${isListening ? 'text-red-400 bg-red-400/10' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.Mic className="w-4 h-4" />
               </button>
-              <button onClick={requestLocation} className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
+              <button onClick={() => requestLocation()} className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.MapPin className="w-4 h-4" />
               </button>
               <button 
