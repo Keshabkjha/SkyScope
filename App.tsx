@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { weatherService, TemperatureUnit } from './services/geminiService';
 import { MessageRole, WeatherMessage, ForecastDay, ChartPoint } from './types';
 import { ChatBubble } from './components/ChatBubble';
@@ -76,7 +76,7 @@ const App: React.FC = () => {
   const recordPromptTimestamp = useCallback(() => {
     localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
   }, []);
-  const manualLocationValue = manualLocation.trim();
+  const manualLocationValue = useMemo(() => manualLocation.trim(), [manualLocation]);
 
   // Persistence effect
   useEffect(() => {
@@ -178,7 +178,7 @@ const App: React.FC = () => {
     setMessages(prev => [...prev, { id: botMsgId, role: MessageRole.BOT, text: '', timestamp: new Date(), isThinking: true }]);
 
     try {
-      const response = await weatherService.queryWeather(query, location, unit, manualLocationValue);
+      const response = await weatherService.queryWeather(query, location ?? undefined, unit, manualLocationValue);
       const alertInfo = detectAlert(response.text);
       const structured = parseStructuredData(response.text);
       
@@ -435,7 +435,7 @@ const App: React.FC = () => {
               <button onClick={toggleListening} className={`p-2 rounded-xl transition-all ${isListening ? 'text-red-400 bg-red-400/10' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.Mic className="w-4 h-4" />
               </button>
-              <button onClick={handleUseCurrentLocation} aria-label="Use current location" className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
+              <button onClick={handleUseCurrentLocation} aria-label="Use current location" className={`p-2 rounded-xl transition-all ${location || manualLocationValue ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.MapPin className="w-4 h-4" />
               </button>
               <button 

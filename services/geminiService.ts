@@ -32,7 +32,7 @@ export class GeminiWeatherService {
 
   async queryWeather(
     prompt: string,
-    location?: { lat: number; lng: number } | null,
+    location?: { lat: number; lng: number },
     unit: TemperatureUnit = 'Celsius',
     locationText?: string
   ) {
