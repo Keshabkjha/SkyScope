@@ -34,6 +34,11 @@ const getInitialMessages = (): WeatherMessage[] => [
   }
 ];
 
+const shouldPromptForLocation = (lastPromptedRaw: string | null) => {
+  const lastPrompted = Number(lastPromptedRaw);
+  return !lastPromptedRaw || !Number.isFinite(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
+};
+
 const App: React.FC = () => {
   const embedParam = new URLSearchParams(window.location.search).get('embed');
   const isEmbedded = embedParam === '1' || embedParam === 'true';
@@ -219,7 +224,8 @@ const App: React.FC = () => {
       },
       (error) => {
         if (!silent) alert("Location access denied. Please enable GPS for local weather.");
-        if (recordPromptAttempt && error.code === error.PERMISSION_DENIED) {
+        const permissionDeniedCode = typeof error.PERMISSION_DENIED === 'number' ? error.PERMISSION_DENIED : 1;
+        if (recordPromptAttempt && error.code === permissionDeniedCode) {
           recordPromptTimestamp();
         }
       },
@@ -238,11 +244,9 @@ const App: React.FC = () => {
     let cancelled = false;
 
     const attemptAutoDetect = async () => {
-      const requestAutoLocationIfNeeded = () => {
+      const requestLocationWithThrottle = () => {
         const lastPromptedRaw = localStorage.getItem(LOCATION_PROMPT_KEY);
-        const lastPrompted = Number(lastPromptedRaw);
-        const shouldPromptForLocation = !lastPromptedRaw || !Number.isFinite(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
-        if (shouldPromptForLocation) {
+        if (shouldPromptForLocation(lastPromptedRaw)) {
           requestLocation({ silent: true, recordPromptAttempt: true });
         }
       };
@@ -263,7 +267,7 @@ const App: React.FC = () => {
           }
 
           if (status.state === 'prompt') {
-            requestAutoLocationIfNeeded();
+            requestLocationWithThrottle();
           }
           return;
         }
@@ -271,7 +275,7 @@ const App: React.FC = () => {
         console.warn("Unable to check location permissions", e);
       }
 
-      requestAutoLocationIfNeeded();
+      requestLocationWithThrottle();
     };
 
     attemptAutoDetect();
