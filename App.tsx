@@ -178,7 +178,7 @@ const App: React.FC = () => {
     setMessages(prev => [...prev, { id: botMsgId, role: MessageRole.BOT, text: '', timestamp: new Date(), isThinking: true }]);
 
     try {
-      const response = await weatherService.queryWeather(query, location ?? undefined, unit, manualLocationValue);
+      const response = await weatherService.queryWeather(query, location, unit, manualLocationValue);
       const alertInfo = detectAlert(response.text);
       const structured = parseStructuredData(response.text);
       
@@ -435,7 +435,13 @@ const App: React.FC = () => {
               <button onClick={toggleListening} className={`p-2 rounded-xl transition-all ${isListening ? 'text-red-400 bg-red-400/10' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.Mic className="w-4 h-4" />
               </button>
-              <button onClick={handleUseCurrentLocation} aria-label="Use current location" className={`p-2 rounded-xl transition-all ${location || manualLocationValue ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
+              <button
+                onClick={handleUseCurrentLocation}
+                aria-label="Use current location"
+                className={`p-2 rounded-xl transition-all ${
+                  location ? 'text-blue-400' : manualLocationValue ? 'text-emerald-400' : 'text-slate-400 hover:text-white'
+                }`}
+              >
                 <Lucide.MapPin className="w-4 h-4" />
               </button>
               <button 
