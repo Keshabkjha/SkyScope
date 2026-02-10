@@ -202,8 +202,8 @@ const App: React.FC = () => {
     }));
   };
 
-  const requestLocation = useCallback((options?: { silent?: boolean; highAccuracy?: boolean; markPrompt?: boolean }) => {
-    const { silent = false, highAccuracy = false, markPrompt = false } = options ?? {};
+  const requestLocation = useCallback((options?: { silent?: boolean; highAccuracy?: boolean; recordPromptAttempt?: boolean }) => {
+    const { silent = false, highAccuracy = false, recordPromptAttempt = false } = options ?? {};
     if (!navigator.geolocation) {
       if (!silent) alert("Geolocation is not supported by this browser.");
       return;
@@ -213,13 +213,13 @@ const App: React.FC = () => {
       (p) => {
         const newLoc = { lat: p.coords.latitude, lng: p.coords.longitude };
         setLocation(newLoc);
-        if (markPrompt) {
+        if (recordPromptAttempt) {
           recordPromptTimestamp();
         }
       },
       (error) => {
         if (!silent) alert("Location access denied. Please enable GPS for local weather.");
-        if (markPrompt && error.code === error.PERMISSION_DENIED) {
+        if (recordPromptAttempt && error.code === error.PERMISSION_DENIED) {
           recordPromptTimestamp();
         }
       },
@@ -240,10 +240,10 @@ const App: React.FC = () => {
     const attemptAutoDetect = async () => {
       const requestAutoLocationIfNeeded = () => {
         const lastPromptedRaw = localStorage.getItem(LOCATION_PROMPT_KEY);
-        const lastPrompted = lastPromptedRaw ? Number(lastPromptedRaw) : NaN;
-        const shouldRequestLocation = Number.isNaN(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
+        const lastPrompted = lastPromptedRaw ? Number(lastPromptedRaw) : 0;
+        const shouldRequestLocation = !lastPromptedRaw || Number.isNaN(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
         if (shouldRequestLocation) {
-          requestLocation({ silent: true, markPrompt: true });
+          requestLocation({ silent: true, recordPromptAttempt: true });
         }
       };
 
@@ -254,6 +254,10 @@ const App: React.FC = () => {
 
           if (status.state === 'granted') {
             requestLocation({ silent: true });
+            return;
+          }
+
+          if (status.state === 'denied') {
             return;
           }
 
