@@ -16,6 +16,7 @@ const SUGGESTIONS = [
 const STORAGE_KEY = 'skyscope_chat_history';
 const LOCATION_PROMPT_KEY = 'skyscope_location_prompted';
 const LOCATION_CACHE_MS = 5 * 60 * 1000;
+const LOCATION_PROMPT_TTL_MS = 24 * 60 * 60 * 1000;
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -198,14 +199,14 @@ const App: React.FC = () => {
     }));
   };
 
-  const requestLocation = useCallback((options?: { silent?: boolean }) => {
-    const { silent = false } = options ?? {};
+  const requestLocation = useCallback((options?: { silent?: boolean; highAccuracy?: boolean }) => {
+    const { silent = false, highAccuracy = false } = options ?? {};
     if (!navigator.geolocation) {
       if (!silent) alert("Geolocation is not supported by this browser.");
       return;
     }
 
-    const enableHighAccuracy = !silent;
+    const enableHighAccuracy = highAccuracy;
 
     navigator.geolocation.getCurrentPosition(
       (p) => {
@@ -231,17 +232,17 @@ const App: React.FC = () => {
 
     const attemptAutoDetect = async () => {
       const promptIfNeeded = () => {
-        const alreadyPrompted = localStorage.getItem(LOCATION_PROMPT_KEY);
-        if (!alreadyPrompted) {
-          localStorage.setItem(LOCATION_PROMPT_KEY, 'true');
+        const lastPrompted = Number(localStorage.getItem(LOCATION_PROMPT_KEY));
+        const shouldPrompt = !lastPrompted || Number.isNaN(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
+        if (shouldPrompt) {
+          localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
           requestLocation({ silent: true });
         }
       };
 
       try {
         if (navigator.permissions?.query) {
-          const permissionName: PermissionName = 'geolocation';
-          const status = await navigator.permissions.query({ name: permissionName });
+          const status = await navigator.permissions.query({ name: 'geolocation' });
           if (cancelled) return;
 
           if (status.state === 'granted') {
@@ -389,7 +390,7 @@ const App: React.FC = () => {
               <button onClick={toggleListening} className={`p-2 rounded-xl transition-all ${isListening ? 'text-red-400 bg-red-400/10' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.Mic className="w-4 h-4" />
               </button>
-              <button onClick={() => requestLocation()} className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
+              <button onClick={() => requestLocation({ highAccuracy: true })} className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.MapPin className="w-4 h-4" />
               </button>
               <button 
