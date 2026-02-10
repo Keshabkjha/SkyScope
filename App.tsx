@@ -240,7 +240,7 @@ const App: React.FC = () => {
     const attemptAutoDetect = async () => {
       const requestAutoLocationIfNeeded = () => {
         const lastPromptedRaw = localStorage.getItem(LOCATION_PROMPT_KEY);
-        const lastPrompted = lastPromptedRaw ? Number(lastPromptedRaw) : 0;
+        const lastPrompted = Number(lastPromptedRaw);
         const shouldRequestLocation = !lastPromptedRaw || Number.isNaN(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
         if (shouldRequestLocation) {
           requestLocation({ silent: true, recordPromptAttempt: true });
