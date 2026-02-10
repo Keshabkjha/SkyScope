@@ -199,25 +199,29 @@ const App: React.FC = () => {
     }));
   };
 
-  const requestLocation = useCallback((options?: { silent?: boolean; highAccuracy?: boolean }) => {
-    const { silent = false, highAccuracy = false } = options ?? {};
+  const requestLocation = useCallback((options?: { silent?: boolean; highAccuracy?: boolean; markPrompt?: boolean }) => {
+    const { silent = false, highAccuracy = false, markPrompt = false } = options ?? {};
     if (!navigator.geolocation) {
       if (!silent) alert("Geolocation is not supported by this browser.");
       return;
     }
 
-    const enableHighAccuracy = highAccuracy;
-
     navigator.geolocation.getCurrentPosition(
       (p) => {
         const newLoc = { lat: p.coords.latitude, lng: p.coords.longitude };
         setLocation(newLoc);
+        if (markPrompt) {
+          localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
+        }
       },
-      () => {
+      (error) => {
         if (!silent) alert("Location access denied. Please enable GPS for local weather.");
+        if (markPrompt && error.code === error.PERMISSION_DENIED) {
+          localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
+        }
       },
       {
-        enableHighAccuracy,
+        enableHighAccuracy: highAccuracy,
         timeout: 10000,
         maximumAge: LOCATION_CACHE_MS
       }
@@ -232,11 +236,11 @@ const App: React.FC = () => {
 
     const attemptAutoDetect = async () => {
       const promptIfNeeded = () => {
-        const lastPrompted = Number(localStorage.getItem(LOCATION_PROMPT_KEY));
-        const shouldPrompt = !lastPrompted || Number.isNaN(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
+        const lastPromptedRaw = localStorage.getItem(LOCATION_PROMPT_KEY);
+        const lastPrompted = lastPromptedRaw ? Number(lastPromptedRaw) : null;
+        const shouldPrompt = lastPrompted === null || Number.isNaN(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
         if (shouldPrompt) {
-          localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
-          requestLocation({ silent: true });
+          requestLocation({ silent: true, markPrompt: true });
         }
       };
 
