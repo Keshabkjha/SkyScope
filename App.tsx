@@ -229,7 +229,7 @@ const App: React.FC = () => {
         maximumAge: LOCATION_CACHE_MS
       }
     );
-  }, [recordPromptTimestamp, setLocation]);
+  }, [recordPromptTimestamp]);
 
   useEffect(() => {
     // Only attempt auto-detection until a location is resolved.
@@ -241,15 +241,14 @@ const App: React.FC = () => {
       const requestAutoLocationIfNeeded = () => {
         const lastPromptedRaw = localStorage.getItem(LOCATION_PROMPT_KEY);
         const lastPrompted = Number(lastPromptedRaw);
-        const hasValidTimestamp = Boolean(lastPromptedRaw) && Number.isFinite(lastPrompted) && lastPrompted > 0;
-        const shouldPromptForLocation = !hasValidTimestamp || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
+        const shouldPromptForLocation = !lastPromptedRaw || !Number.isFinite(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
         if (shouldPromptForLocation) {
           requestLocation({ silent: true, recordPromptAttempt: true });
         }
       };
 
       try {
-        if (navigator.permissions?.query) {
+        if (typeof navigator.permissions?.query === 'function') {
           const status = await navigator.permissions.query({ name: 'geolocation' });
           if (cancelled) return;
 
