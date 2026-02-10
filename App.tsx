@@ -77,6 +77,11 @@ const App: React.FC = () => {
     localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
   }, []);
   const manualLocationValue = useMemo(() => manualLocation.trim(), [manualLocation]);
+  const locationIndicatorClass = location
+    ? 'text-blue-400'
+    : manualLocationValue
+      ? 'text-emerald-400'
+      : 'text-slate-400 hover:text-white';
 
   // Persistence effect
   useEffect(() => {
@@ -178,7 +183,7 @@ const App: React.FC = () => {
     setMessages(prev => [...prev, { id: botMsgId, role: MessageRole.BOT, text: '', timestamp: new Date(), isThinking: true }]);
 
     try {
-      const response = await weatherService.queryWeather(query, location, unit, manualLocationValue);
+      const response = await weatherService.queryWeather(query, location || undefined, unit, manualLocationValue);
       const alertInfo = detectAlert(response.text);
       const structured = parseStructuredData(response.text);
       
@@ -438,9 +443,7 @@ const App: React.FC = () => {
               <button
                 onClick={handleUseCurrentLocation}
                 aria-label="Use current location"
-                className={`p-2 rounded-xl transition-all ${
-                  location ? 'text-blue-400' : manualLocationValue ? 'text-emerald-400' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`p-2 rounded-xl transition-all ${locationIndicatorClass}`}
               >
                 <Lucide.MapPin className="w-4 h-4" />
               </button>
