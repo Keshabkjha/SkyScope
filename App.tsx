@@ -167,7 +167,7 @@ const App: React.FC = () => {
     const query = textToQuery || input;
     if (!query.trim() || loading) return;
 
-    const locationForQuery = manualLocationValue ? undefined : location ?? undefined;
+    const locationForQuery = manualLocationValue ? undefined : location;
 
     // Switch to chat view if sending from map
     if (view === 'map') setView('chat');
@@ -180,7 +180,7 @@ const App: React.FC = () => {
     setMessages(prev => [...prev, { id: botMsgId, role: MessageRole.BOT, text: '', timestamp: new Date(), isThinking: true }]);
 
     try {
-      const response = await weatherService.queryWeather(query, locationForQuery, unit, manualLocationValue || undefined);
+      const response = await weatherService.queryWeather(query, locationForQuery, unit, manualLocationValue);
       const alertInfo = detectAlert(response.text);
       const structured = parseStructuredData(response.text);
       
@@ -241,7 +241,7 @@ const App: React.FC = () => {
     );
   }, [recordPromptTimestamp]);
 
-  const handleManualLocationRequest = useCallback(() => {
+  const handleUseCurrentLocation = useCallback(() => {
     setManualLocation('');
     requestLocation({ highAccuracy: true });
   }, [requestLocation]);
@@ -437,7 +437,7 @@ const App: React.FC = () => {
               <button onClick={toggleListening} className={`p-2 rounded-xl transition-all ${isListening ? 'text-red-400 bg-red-400/10' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.Mic className="w-4 h-4" />
               </button>
-              <button onClick={handleManualLocationRequest} aria-label="Use current location" className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
+              <button onClick={handleUseCurrentLocation} aria-label="Use current location" className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.MapPin className="w-4 h-4" />
               </button>
               <button 
