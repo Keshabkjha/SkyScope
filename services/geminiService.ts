@@ -30,15 +30,23 @@ export class GeminiWeatherService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async queryWeather(prompt: string, location?: { lat: number; lng: number }, unit: TemperatureUnit = 'Celsius') {
+  async queryWeather(
+    prompt: string,
+    location?: { lat: number; lng: number },
+    unit: TemperatureUnit = 'Celsius',
+    locationText?: string
+  ) {
     let lastError: any = null;
 
     for (const modelName of FALLBACK_MODELS) {
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          const locationContext = location 
-            ? `Current GPS: ${location.lat}, ${location.lng}. Use this for "local" or "here" queries.`
-            : "No location data. Ask for city if needed.";
+          const locationOverride = locationText?.trim();
+          const locationContext = locationOverride
+            ? `User provided location: ${locationOverride}. Treat this as the default for "local", "here", or when no location is specified.`
+            : location 
+              ? `Current GPS: ${location.lat}, ${location.lng}. Use this for "local" or "here" queries.`
+              : "No location data. Ask for city if needed.";
 
           const response = await this.ai.models.generateContent({
             model: modelName,

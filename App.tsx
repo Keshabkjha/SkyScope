@@ -70,11 +70,13 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [manualLocation, setManualLocation] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const recordPromptTimestamp = useCallback(() => {
     localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
   }, []);
+  const manualLocationValue = manualLocation.trim();
 
   // Persistence effect
   useEffect(() => {
@@ -165,6 +167,9 @@ const App: React.FC = () => {
     const query = textToQuery || input;
     if (!query.trim() || loading) return;
 
+    const locationOverride = manualLocationValue || undefined;
+    const locationForQuery = locationOverride ? undefined : location || undefined;
+
     // Switch to chat view if sending from map
     if (view === 'map') setView('chat');
 
@@ -176,7 +181,7 @@ const App: React.FC = () => {
     setMessages(prev => [...prev, { id: botMsgId, role: MessageRole.BOT, text: '', timestamp: new Date(), isThinking: true }]);
 
     try {
-      const response = await weatherService.queryWeather(query, location || undefined, unit);
+      const response = await weatherService.queryWeather(query, locationForQuery, unit, locationOverride);
       const alertInfo = detectAlert(response.text);
       const structured = parseStructuredData(response.text);
       
@@ -239,7 +244,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // Only attempt auto-detection until a location is resolved.
-    if (!navigator.geolocation || location) return;
+    if (!navigator.geolocation || location || manualLocationValue) return;
 
     let cancelled = false;
 
@@ -283,7 +288,7 @@ const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [location, requestLocation]);
+  }, [location, manualLocationValue, requestLocation]);
 
   const toggleUnit = () => {
     setUnit(prev => prev === 'Celsius' ? 'Fahrenheit' : 'Celsius');
@@ -393,6 +398,26 @@ const App: React.FC = () => {
             </div>
           )}
           
+          <div className="flex items-center gap-2 mb-2">
+            <Lucide.MapPin className="w-3.5 h-3.5 text-slate-400" />
+            <input
+              type="text"
+              value={manualLocation}
+              onChange={(e) => setManualLocation(e.target.value)}
+              placeholder="Enter location manually (optional)"
+              className="flex-1 bg-slate-800/80 border border-slate-700 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder:text-slate-500"
+            />
+            {manualLocationValue && (
+              <button
+                onClick={() => setManualLocation('')}
+                className="p-2 text-slate-400 hover:text-white transition-colors"
+                title="Clear manual location"
+              >
+                <Lucide.X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
           <div className="relative">
             <input
               type="text"
@@ -406,7 +431,7 @@ const App: React.FC = () => {
               <button onClick={toggleListening} className={`p-2 rounded-xl transition-all ${isListening ? 'text-red-400 bg-red-400/10' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.Mic className="w-4 h-4" />
               </button>
-              <button onClick={() => requestLocation({ highAccuracy: true })} className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
+              <button onClick={() => { setManualLocation(''); requestLocation({ highAccuracy: true }); }} className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.MapPin className="w-4 h-4" />
               </button>
               <button 
