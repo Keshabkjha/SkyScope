@@ -200,7 +200,7 @@ const App: React.FC = () => {
   };
 
   const requestLocation = useCallback((options?: { silent?: boolean; highAccuracy?: boolean; markPrompt?: boolean }) => {
-    const { silent = false, highAccuracy = false, markPrompt = false } = options ?? {};
+    const { silent = false, highAccuracy = false, markPrompt = silent } = options ?? {};
     if (!navigator.geolocation) {
       if (!silent) alert("Geolocation is not supported by this browser.");
       return;
@@ -237,10 +237,10 @@ const App: React.FC = () => {
     const attemptAutoDetect = async () => {
       const promptIfNeeded = () => {
         const lastPromptedRaw = localStorage.getItem(LOCATION_PROMPT_KEY);
-        const lastPrompted = lastPromptedRaw ? Number(lastPromptedRaw) : null;
-        const shouldPrompt = lastPrompted === null || Number.isNaN(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
+        const lastPrompted = lastPromptedRaw ? Number(lastPromptedRaw) : NaN;
+        const shouldPrompt = Number.isNaN(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
         if (shouldPrompt) {
-          requestLocation({ silent: true, markPrompt: true });
+          requestLocation({ silent: true });
         }
       };
 
