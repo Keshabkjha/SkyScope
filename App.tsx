@@ -229,7 +229,7 @@ const App: React.FC = () => {
         maximumAge: LOCATION_CACHE_MS
       }
     );
-  }, [recordPromptTimestamp]);
+  }, [recordPromptTimestamp, setLocation]);
 
   useEffect(() => {
     // Only attempt auto-detection until a location is resolved.
@@ -241,8 +241,9 @@ const App: React.FC = () => {
       const requestAutoLocationIfNeeded = () => {
         const lastPromptedRaw = localStorage.getItem(LOCATION_PROMPT_KEY);
         const lastPrompted = Number(lastPromptedRaw);
-        const shouldRequestLocation = !lastPromptedRaw || Number.isNaN(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
-        if (shouldRequestLocation) {
+        const hasValidTimestamp = Boolean(lastPromptedRaw) && Number.isFinite(lastPrompted) && lastPrompted > 0;
+        const shouldPromptForLocation = !hasValidTimestamp || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
+        if (shouldPromptForLocation) {
           requestLocation({ silent: true, recordPromptAttempt: true });
         }
       };
@@ -258,6 +259,7 @@ const App: React.FC = () => {
           }
 
           if (status.state === 'denied') {
+            // Respect denied permission without prompting again.
             return;
           }
 
