@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { weatherService, TemperatureUnit } from './services/geminiService';
 import { MessageRole, WeatherMessage, ForecastDay, ChartPoint } from './types';
 import { ChatBubble } from './components/ChatBubble';
@@ -76,13 +76,13 @@ const App: React.FC = () => {
   const recordPromptTimestamp = useCallback(() => {
     localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
   }, []);
-  const manualLocationValue = manualLocation.trim();
+  const manualLocationValue = useMemo(() => manualLocation.trim(), [manualLocation]);
   let locationIndicatorClass = 'text-slate-400 hover:text-white';
-  if (manualLocationValue) {
-    locationIndicatorClass = 'text-emerald-400';
-  }
   if (location) {
     locationIndicatorClass = 'text-blue-400';
+  }
+  if (manualLocationValue) {
+    locationIndicatorClass = 'text-emerald-400';
   }
 
   // Persistence effect
