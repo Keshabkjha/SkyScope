@@ -205,6 +205,8 @@ const App: React.FC = () => {
       return;
     }
 
+    const enableHighAccuracy = !silent;
+
     navigator.geolocation.getCurrentPosition(
       (p) => {
         const newLoc = { lat: p.coords.latitude, lng: p.coords.longitude };
@@ -214,7 +216,7 @@ const App: React.FC = () => {
         if (!silent) alert("Location access denied. Please enable GPS for local weather.");
       },
       {
-        enableHighAccuracy: true,
+        enableHighAccuracy,
         timeout: 10000,
         maximumAge: LOCATION_CACHE_MS
       }
@@ -228,9 +230,18 @@ const App: React.FC = () => {
     let cancelled = false;
 
     const attemptAutoDetect = async () => {
+      const promptIfNeeded = () => {
+        const alreadyPrompted = localStorage.getItem(LOCATION_PROMPT_KEY);
+        if (!alreadyPrompted) {
+          localStorage.setItem(LOCATION_PROMPT_KEY, 'true');
+          requestLocation({ silent: true });
+        }
+      };
+
       try {
         if (navigator.permissions?.query) {
-          const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+          const permissionName: PermissionName = 'geolocation';
+          const status = await navigator.permissions.query({ name: permissionName });
           if (cancelled) return;
 
           if (status.state === 'granted') {
@@ -239,11 +250,7 @@ const App: React.FC = () => {
           }
 
           if (status.state === 'prompt') {
-            const alreadyPrompted = localStorage.getItem(LOCATION_PROMPT_KEY);
-            if (!alreadyPrompted) {
-              localStorage.setItem(LOCATION_PROMPT_KEY, 'true');
-              requestLocation({ silent: true });
-            }
+            promptIfNeeded();
           }
           return;
         }
@@ -251,11 +258,7 @@ const App: React.FC = () => {
         console.warn("Unable to check location permissions", e);
       }
 
-      const alreadyPrompted = localStorage.getItem(LOCATION_PROMPT_KEY);
-      if (!alreadyPrompted) {
-        localStorage.setItem(LOCATION_PROMPT_KEY, 'true');
-        requestLocation({ silent: true });
-      }
+      promptIfNeeded();
     };
 
     attemptAutoDetect();
