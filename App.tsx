@@ -67,7 +67,7 @@ const App: React.FC = () => {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
-  const markPrompted = useCallback(() => {
+  const recordPromptTimestamp = useCallback(() => {
     localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
   }, []);
 
@@ -214,13 +214,13 @@ const App: React.FC = () => {
         const newLoc = { lat: p.coords.latitude, lng: p.coords.longitude };
         setLocation(newLoc);
         if (markPrompt) {
-          markPrompted();
+          recordPromptTimestamp();
         }
       },
       (error) => {
         if (!silent) alert("Location access denied. Please enable GPS for local weather.");
         if (markPrompt && error.code === error.PERMISSION_DENIED) {
-          markPrompted();
+          recordPromptTimestamp();
         }
       },
       {
@@ -229,7 +229,7 @@ const App: React.FC = () => {
         maximumAge: LOCATION_CACHE_MS
       }
     );
-  }, [markPrompted]);
+  }, [recordPromptTimestamp]);
 
   useEffect(() => {
     // Only attempt auto-detection until a location is resolved.
@@ -238,11 +238,11 @@ const App: React.FC = () => {
     let cancelled = false;
 
     const attemptAutoDetect = async () => {
-      const promptIfNeeded = () => {
+      const requestAutoLocationIfNeeded = () => {
         const lastPromptedRaw = localStorage.getItem(LOCATION_PROMPT_KEY);
         const lastPrompted = lastPromptedRaw ? Number(lastPromptedRaw) : NaN;
-        const shouldAttemptAutoLocation = Number.isNaN(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
-        if (shouldAttemptAutoLocation) {
+        const shouldRequestLocation = Number.isNaN(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
+        if (shouldRequestLocation) {
           requestLocation({ silent: true, markPrompt: true });
         }
       };
@@ -258,7 +258,7 @@ const App: React.FC = () => {
           }
 
           if (status.state === 'prompt') {
-            promptIfNeeded();
+            requestAutoLocationIfNeeded();
           }
           return;
         }
@@ -266,7 +266,7 @@ const App: React.FC = () => {
         console.warn("Unable to check location permissions", e);
       }
 
-      promptIfNeeded();
+      requestAutoLocationIfNeeded();
     };
 
     attemptAutoDetect();
