@@ -167,8 +167,8 @@ const App: React.FC = () => {
     const query = textToQuery || input;
     if (!query.trim() || loading) return;
 
-    const locationForQuery = manualLocationValue ? undefined : location ?? undefined;
-    const locationOverride = manualLocationValue ? manualLocationValue : undefined;
+    const locationOverride = manualLocationValue || undefined;
+    const locationForQuery = locationOverride ? undefined : location ?? undefined;
 
     // Switch to chat view if sending from map
     if (view === 'map') setView('chat');
