@@ -15,6 +15,7 @@ const SUGGESTIONS = [
 
 const STORAGE_KEY = 'skyscope_chat_history';
 const LOCATION_PROMPT_KEY = 'skyscope_location_prompted';
+const LOCATION_CACHE_MS = 5 * 60 * 1000;
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -215,18 +216,18 @@ const App: React.FC = () => {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 300000
+        maximumAge: LOCATION_CACHE_MS
       }
     );
   };
 
   useEffect(() => {
+    // Only attempt auto-detection until a location is resolved.
     if (!navigator.geolocation || location) return;
 
     let cancelled = false;
 
     const attemptAutoDetect = async () => {
-      const alreadyPrompted = localStorage.getItem(LOCATION_PROMPT_KEY);
       try {
         if (navigator.permissions?.query) {
           const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
@@ -237,9 +238,12 @@ const App: React.FC = () => {
             return;
           }
 
-          if (status.state === 'prompt' && !alreadyPrompted) {
-            localStorage.setItem(LOCATION_PROMPT_KEY, 'true');
-            requestLocation({ silent: true });
+          if (status.state === 'prompt') {
+            const alreadyPrompted = localStorage.getItem(LOCATION_PROMPT_KEY);
+            if (!alreadyPrompted) {
+              localStorage.setItem(LOCATION_PROMPT_KEY, 'true');
+              requestLocation({ silent: true });
+            }
           }
           return;
         }
@@ -247,6 +251,7 @@ const App: React.FC = () => {
         console.warn("Unable to check location permissions", e);
       }
 
+      const alreadyPrompted = localStorage.getItem(LOCATION_PROMPT_KEY);
       if (!alreadyPrompted) {
         localStorage.setItem(LOCATION_PROMPT_KEY, 'true');
         requestLocation({ silent: true });
