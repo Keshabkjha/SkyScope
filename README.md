@@ -8,9 +8,9 @@
 ![Vite](https://img.shields.io/badge/Vite-6.2.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-*A sophisticated weather intelligence platform powered by AI, providing real-time weather data, forecasts, and intelligent insights through an intuitive chat interface.*
+*A sophisticated weather intelligence platform powered by AI, providing real-time weather data, forecasts, and intelligent insights through an intuitive chat interface. Now with embeddable widget support for seamless integration into any website or application.*
 
-[View Demo](https://skyscope-phi.vercel.app/) · [Report Bug](https://github.com/Keshabkjha/SkyScope/issues) · [Request Feature](https://github.com/Keshabkjha/SkyScope/issues)
+[View Demo](https://skyscope-phi.vercel.app/) · [Embed Demo](https://keshabkjha.github.io/ClimaSense/) · [Report Bug](https://github.com/Keshabkjha/SkyScope/issues) · [Request Feature](https://github.com/Keshabkjha/SkyScope/issues)
 
 </div>
 
@@ -24,6 +24,8 @@
 - **⚡ Real-time Updates**: Live weather data with automatic refresh capabilities
 - **🎯 Smart Suggestions**: Contextual weather queries and intelligent recommendations
 - **💾 Local Storage**: Persistent chat history and user preferences
+- **🔗 Embeddable Widget**: Easy integration into any website or application
+- **🎛️ Embed Mode**: Clean, minimal interface perfect for third-party integration
 
 ## 🚀 Quick Start
 
@@ -78,7 +80,76 @@
 - **Chat History**: Your conversations are automatically saved
 - **Smart Suggestions**: Get contextual weather query recommendations
 
-## 🛠️ Development
+## � Embedding SkyScope
+
+SkyScope can be easily embedded into any website or application as a widget. Perfect for adding AI-powered weather intelligence to your existing projects.
+
+### Basic Embedding
+
+```html
+<iframe
+  src="https://skyscope-phi.vercel.app/?embed=1"
+  title="SkyScope Weather Assistant"
+  width="450"
+  height="700"
+  frameborder="0"
+  allow="geolocation; microphone"
+  sandbox="allow-scripts allow-same-origin allow-forms"
+></iframe>
+```
+
+### Embed Parameters
+
+- `?embed=1` or `?embed=true` - Enables embed mode
+- **Auto-open**: Chat opens automatically when embedded
+- **Clean UI**: Close button and launcher are hidden
+- **Responsive**: Adapts to different screen sizes
+
+### Advanced Embedding
+
+For more control, you can use JavaScript to manage the embedded widget:
+
+```javascript
+// Create embed container
+const container = document.createElement('div');
+container.innerHTML = `
+  <iframe
+    id="skyscope-widget"
+    src="https://skyscope-phi.vercel.app/?embed=1"
+    title="SkyScope Weather Assistant"
+    width="100%"
+    height="700"
+    frameborder="0"
+    allow="geolocation; microphone"
+    sandbox="allow-scripts allow-same-origin allow-forms"
+    loading="lazy"
+  ></iframe>
+`;
+
+// Add to your page
+document.getElementById('weather-widget-container').appendChild(container);
+```
+
+### Security & Permissions
+
+- **Sandboxed**: Safe iframe environment
+- **Controlled Permissions**: Only requests necessary permissions
+- **CORS Compliant**: Works across different domains
+- **Secure**: No sensitive data exposure
+
+### Use Cases
+
+- **Weather Websites**: Add AI chat to traditional weather sites
+- **Travel Apps**: Provide weather insights for travelers
+- **Agricultural Platforms**: Weather intelligence for farming
+- **Event Planning**: Weather forecasts for outdoor events
+- **Educational Sites**: Interactive weather learning tools
+
+### Live Example
+
+See SkyScope in action at [ClimaSense](https://keshabkjha.github.io/ClimaSense/) - a weather dashboard that integrates SkyScope as an AI assistant.
+
+## ��️ Development
 
 ### Available Scripts
 
