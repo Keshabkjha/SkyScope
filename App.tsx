@@ -67,6 +67,9 @@ const App: React.FC = () => {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const markPrompted = useCallback(() => {
+    localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
+  }, []);
 
   // Persistence effect
   useEffect(() => {
@@ -206,10 +209,6 @@ const App: React.FC = () => {
       return;
     }
 
-    const markPrompted = () => {
-      localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
-    };
-
     navigator.geolocation.getCurrentPosition(
       (p) => {
         const newLoc = { lat: p.coords.latitude, lng: p.coords.longitude };
@@ -230,7 +229,7 @@ const App: React.FC = () => {
         maximumAge: LOCATION_CACHE_MS
       }
     );
-  }, []);
+  }, [markPrompted]);
 
   useEffect(() => {
     // Only attempt auto-detection until a location is resolved.
@@ -242,8 +241,8 @@ const App: React.FC = () => {
       const promptIfNeeded = () => {
         const lastPromptedRaw = localStorage.getItem(LOCATION_PROMPT_KEY);
         const lastPrompted = lastPromptedRaw ? Number(lastPromptedRaw) : NaN;
-        const shouldPrompt = Number.isNaN(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
-        if (shouldPrompt) {
+        const shouldAttemptAutoLocation = Number.isNaN(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
+        if (shouldAttemptAutoLocation) {
           requestLocation({ silent: true, markPrompt: true });
         }
       };
