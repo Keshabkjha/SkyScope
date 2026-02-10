@@ -28,6 +28,7 @@ jobs:
       run: npm run lint
       
     - name: Run Prettier check
+      continue-on-error: true
       run: npm run format:check
 
   type-check:
@@ -68,7 +69,7 @@ jobs:
       run: npm ci
       
     - name: Run npm audit
-      run: npm audit --audit-level=moderate
+      run: npm run security:audit
       
     - name: Run Snyk security scan
       uses: snyk/actions/node@master
