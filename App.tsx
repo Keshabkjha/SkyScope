@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { weatherService, TemperatureUnit } from './services/geminiService';
 import { MessageRole, WeatherMessage, ForecastDay, ChartPoint } from './types';
 import { ChatBubble } from './components/ChatBubble';
@@ -14,6 +14,9 @@ const SUGGESTIONS = [
 ];
 
 const STORAGE_KEY = 'skyscope_chat_history';
+const LOCATION_PROMPT_KEY = 'skyscope_location_prompted';
+const LOCATION_CACHE_MS = 5 * 60 * 1000;
+const LOCATION_PROMPT_TTL_MS = 24 * 60 * 60 * 1000;
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -30,6 +33,11 @@ const getInitialMessages = (): WeatherMessage[] => [
     timestamp: new Date(),
   }
 ];
+
+const shouldPromptForLocation = (lastPromptedRaw: string | null) => {
+  const lastPrompted = Number(lastPromptedRaw);
+  return !lastPromptedRaw || !Number.isFinite(lastPrompted) || Date.now() - lastPrompted > LOCATION_PROMPT_TTL_MS;
+};
 
 const App: React.FC = () => {
   const embedParam = new URLSearchParams(window.location.search).get('embed');
@@ -62,8 +70,18 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [manualLocation, setManualLocation] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const recordPromptTimestamp = useCallback(() => {
+    localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
+  }, []);
+  const manualLocationValue = manualLocation.trim();
+  const locationIndicatorClass = manualLocationValue
+    ? 'text-emerald-400'
+    : location
+      ? 'text-blue-400'
+      : 'text-slate-400 hover:text-white';
 
   // Persistence effect
   useEffect(() => {
@@ -165,7 +183,7 @@ const App: React.FC = () => {
     setMessages(prev => [...prev, { id: botMsgId, role: MessageRole.BOT, text: '', timestamp: new Date(), isThinking: true }]);
 
     try {
-      const response = await weatherService.queryWeather(query, location || undefined, unit);
+      const response = await weatherService.queryWeather(query, location || undefined, unit, manualLocationValue);
       const alertInfo = detectAlert(response.text);
       const structured = parseStructuredData(response.text);
       
@@ -196,15 +214,88 @@ const App: React.FC = () => {
     }));
   };
 
-  const requestLocation = () => {
+  const requestLocation = useCallback((options?: { silent?: boolean; highAccuracy?: boolean; recordPromptAttempt?: boolean }) => {
+    const { silent = false, highAccuracy = false, recordPromptAttempt = false } = options ?? {};
+    if (!navigator.geolocation) {
+      if (!silent) alert("Geolocation is not supported by this browser.");
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       (p) => {
         const newLoc = { lat: p.coords.latitude, lng: p.coords.longitude };
         setLocation(newLoc);
+        if (recordPromptAttempt) {
+          recordPromptTimestamp();
+        }
       },
-      () => alert("Location access denied. Please enable GPS for local weather.")
+      (error) => {
+        if (!silent) alert("Location access denied. Please enable GPS for local weather.");
+        const permissionDeniedCode = typeof error.PERMISSION_DENIED === 'number' ? error.PERMISSION_DENIED : 1;
+        if (recordPromptAttempt && error.code === permissionDeniedCode) {
+          recordPromptTimestamp();
+        }
+      },
+      {
+        enableHighAccuracy: highAccuracy,
+        timeout: 10000,
+        maximumAge: LOCATION_CACHE_MS
+      }
     );
-  };
+  }, [recordPromptTimestamp]);
+
+  const handleUseCurrentLocation = useCallback(() => {
+    setManualLocation('');
+    requestLocation({ highAccuracy: true });
+  }, [requestLocation]);
+
+  useEffect(() => {
+    // Only attempt auto-detection until a location is resolved.
+    if (!navigator.geolocation || location || manualLocationValue) return;
+
+    let cancelled = false;
+
+    const attemptAutoDetect = async () => {
+      const requestLocationWithThrottle = () => {
+        const lastPromptedRaw = localStorage.getItem(LOCATION_PROMPT_KEY);
+        if (shouldPromptForLocation(lastPromptedRaw)) {
+          requestLocation({ silent: true, recordPromptAttempt: true });
+        }
+      };
+
+      try {
+        if (typeof navigator.permissions?.query === 'function') {
+          const status = await navigator.permissions.query({ name: 'geolocation' });
+          if (cancelled) return;
+
+          if (status.state === 'granted') {
+            requestLocation({ silent: true });
+            return;
+          }
+
+          if (status.state === 'denied') {
+            // Respect denied permission without prompting again.
+            return;
+          }
+
+          if (status.state === 'prompt') {
+            requestLocationWithThrottle();
+          }
+          return;
+        }
+      } catch (e) {
+        console.warn("Unable to check location permissions", e);
+      }
+
+      requestLocationWithThrottle();
+    };
+
+    attemptAutoDetect();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location, manualLocationValue, requestLocation]);
 
   const toggleUnit = () => {
     setUnit(prev => prev === 'Celsius' ? 'Fahrenheit' : 'Celsius');
@@ -314,6 +405,28 @@ const App: React.FC = () => {
             </div>
           )}
           
+          <div className="flex items-center gap-2 mb-2">
+            <Lucide.MapPin className="w-3.5 h-3.5 text-slate-400" />
+            <input
+              type="text"
+              value={manualLocation}
+              onChange={(e) => setManualLocation(e.target.value)}
+              aria-label="Manual location"
+              placeholder="Enter location manually (optional)"
+              className="flex-1 bg-slate-800/80 border border-slate-700 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder:text-slate-500"
+            />
+            {manualLocationValue && (
+              <button
+                onClick={() => setManualLocation('')}
+                aria-label="Clear manual location"
+                className="p-2 text-slate-400 hover:text-white transition-colors"
+                title="Clear manual location"
+              >
+                <Lucide.X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
           <div className="relative">
             <input
               type="text"
@@ -327,7 +440,11 @@ const App: React.FC = () => {
               <button onClick={toggleListening} className={`p-2 rounded-xl transition-all ${isListening ? 'text-red-400 bg-red-400/10' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.Mic className="w-4 h-4" />
               </button>
-              <button onClick={requestLocation} className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
+              <button
+                onClick={handleUseCurrentLocation}
+                aria-label="Use current location"
+                className={`p-2 rounded-xl transition-all ${locationIndicatorClass}`}
+              >
                 <Lucide.MapPin className="w-4 h-4" />
               </button>
               <button 
