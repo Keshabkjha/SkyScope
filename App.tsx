@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { weatherService, TemperatureUnit } from './services/geminiService';
 import { MessageRole, WeatherMessage, ForecastDay, ChartPoint } from './types';
 import { ChatBubble } from './components/ChatBubble';
@@ -76,14 +76,12 @@ const App: React.FC = () => {
   const recordPromptTimestamp = useCallback(() => {
     localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
   }, []);
-  const manualLocationValue = useMemo(() => manualLocation.trim(), [manualLocation]);
-  let locationIndicatorClass = 'text-slate-400 hover:text-white';
-  if (location) {
-    locationIndicatorClass = 'text-blue-400';
-  }
-  if (manualLocationValue) {
-    locationIndicatorClass = 'text-emerald-400';
-  }
+  const manualLocationValue = manualLocation.trim();
+  const locationIndicatorClass = () => {
+    if (manualLocationValue) return 'text-emerald-400';
+    if (location) return 'text-blue-400';
+    return 'text-slate-400 hover:text-white';
+  };
 
   // Persistence effect
   useEffect(() => {
@@ -445,7 +443,7 @@ const App: React.FC = () => {
               <button
                 onClick={handleUseCurrentLocation}
                 aria-label="Use current location"
-                className={`p-2 rounded-xl transition-all ${locationIndicatorClass}`}
+                className={`p-2 rounded-xl transition-all ${locationIndicatorClass()}`}
               >
                 <Lucide.MapPin className="w-4 h-4" />
               </button>
