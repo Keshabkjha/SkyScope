@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { weatherService, TemperatureUnit } from './services/geminiService';
 import { MessageRole, WeatherMessage, ForecastDay, ChartPoint } from './types';
 import { ChatBubble } from './components/ChatBubble';
@@ -76,7 +76,7 @@ const App: React.FC = () => {
   const recordPromptTimestamp = useCallback(() => {
     localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
   }, []);
-  const manualLocationValue = useMemo(() => manualLocation.trim(), [manualLocation]);
+  const manualLocationValue = manualLocation.trim();
 
   // Persistence effect
   useEffect(() => {
@@ -167,8 +167,6 @@ const App: React.FC = () => {
     const query = textToQuery || input;
     if (!query.trim() || loading) return;
 
-    const locationForQuery = location;
-
     // Switch to chat view if sending from map
     if (view === 'map') setView('chat');
 
@@ -180,7 +178,7 @@ const App: React.FC = () => {
     setMessages(prev => [...prev, { id: botMsgId, role: MessageRole.BOT, text: '', timestamp: new Date(), isThinking: true }]);
 
     try {
-      const response = await weatherService.queryWeather(query, locationForQuery, unit, manualLocationValue);
+      const response = await weatherService.queryWeather(query, location, unit, manualLocationValue);
       const alertInfo = detectAlert(response.text);
       const structured = parseStructuredData(response.text);
       
