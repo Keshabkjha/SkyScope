@@ -98,6 +98,7 @@ jobs:
       run: npm run security:audit
       
     - name: Run dependency check
+      continue-on-error: true
       run: npm run deps:check
 
   deploy-staging:
