@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { weatherService, TemperatureUnit } from './services/geminiService';
 import { MessageRole, WeatherMessage, ForecastDay, ChartPoint } from './types';
 import { ChatBubble } from './components/ChatBubble';
@@ -198,7 +198,7 @@ const App: React.FC = () => {
     }));
   };
 
-  const requestLocation = (options?: { silent?: boolean }) => {
+  const requestLocation = useCallback((options?: { silent?: boolean }) => {
     const { silent = false } = options ?? {};
     if (!navigator.geolocation) {
       if (!silent) alert("Geolocation is not supported by this browser.");
@@ -219,7 +219,7 @@ const App: React.FC = () => {
         maximumAge: LOCATION_CACHE_MS
       }
     );
-  };
+  }, []);
 
   useEffect(() => {
     // Only attempt auto-detection until a location is resolved.
@@ -263,7 +263,7 @@ const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [location]);
+  }, [location, requestLocation]);
 
   const toggleUnit = () => {
     setUnit(prev => prev === 'Celsius' ? 'Fahrenheit' : 'Celsius');
