@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { weatherService, TemperatureUnit } from './services/geminiService';
 import { MessageRole, WeatherMessage, ForecastDay, ChartPoint } from './types';
 import { ChatBubble } from './components/ChatBubble';
@@ -76,7 +76,7 @@ const App: React.FC = () => {
   const recordPromptTimestamp = useCallback(() => {
     localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
   }, []);
-  const manualLocationValue = manualLocation.trim();
+  const manualLocationValue = useMemo(() => manualLocation.trim(), [manualLocation]);
 
   // Persistence effect
   useEffect(() => {
@@ -167,8 +167,8 @@ const App: React.FC = () => {
     const query = textToQuery || input;
     if (!query.trim() || loading) return;
 
+    const locationForQuery = manualLocationValue ? undefined : location || undefined;
     const locationOverride = manualLocationValue || undefined;
-    const locationForQuery = locationOverride ? undefined : location || undefined;
 
     // Switch to chat view if sending from map
     if (view === 'map') setView('chat');
@@ -241,6 +241,11 @@ const App: React.FC = () => {
       }
     );
   }, [recordPromptTimestamp]);
+
+  const handleManualLocationRequest = useCallback(() => {
+    setManualLocation('');
+    requestLocation({ highAccuracy: true });
+  }, [requestLocation]);
 
   useEffect(() => {
     // Only attempt auto-detection until a location is resolved.
@@ -431,7 +436,7 @@ const App: React.FC = () => {
               <button onClick={toggleListening} className={`p-2 rounded-xl transition-all ${isListening ? 'text-red-400 bg-red-400/10' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.Mic className="w-4 h-4" />
               </button>
-              <button onClick={() => { setManualLocation(''); requestLocation({ highAccuracy: true }); }} className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
+              <button onClick={handleManualLocationRequest} className={`p-2 rounded-xl transition-all ${location ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
                 <Lucide.MapPin className="w-4 h-4" />
               </button>
               <button 
