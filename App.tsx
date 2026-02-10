@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { weatherService, TemperatureUnit } from './services/geminiService';
 import { MessageRole, WeatherMessage, ForecastDay, ChartPoint } from './types';
 import { ChatBubble } from './components/ChatBubble';
@@ -76,7 +76,7 @@ const App: React.FC = () => {
   const recordPromptTimestamp = useCallback(() => {
     localStorage.setItem(LOCATION_PROMPT_KEY, Date.now().toString());
   }, []);
-  const manualLocationValue = manualLocation.trim();
+  const manualLocationValue = useMemo(() => manualLocation.trim(), [manualLocation]);
 
   // Persistence effect
   useEffect(() => {
@@ -167,7 +167,7 @@ const App: React.FC = () => {
     const query = textToQuery || input;
     if (!query.trim() || loading) return;
 
-    const locationForQuery = manualLocationValue ? undefined : location;
+    const locationForQuery = location;
 
     // Switch to chat view if sending from map
     if (view === 'map') setView('chat');
