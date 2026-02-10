@@ -1,8 +1,127 @@
 # Contributing to SkyScope
 
-Thank you for your interest in contributing to SkyScope! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to SkyScope! This document provides guidelines and information for contributors and embedders.
 
-## 🤝 How to Contribute
+## 🌟 Embedding SkyScope in Your Application
+
+**SkyScope was created by [Keshab Kumar](https://github.com/Keshabkjha)** as an open-source weather intelligence platform. You can easily embed it in your own applications and give proper credit to the creator.
+
+### Quick Start - Copy & Paste
+
+Just copy this code and paste it into your HTML:
+
+```html
+<!-- SkyScope Weather Widget -->
+<iframe
+  src="https://skyscope-phi.vercel.app/?embed=1"
+  title="SkyScope Weather Assistant by Keshab Kumar"
+  width="450"
+  height="700"
+  frameborder="0"
+  allow="geolocation; microphone"
+  sandbox="allow-scripts allow-same-origin allow-forms"
+  style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"
+></iframe>
+<!-- Created by Keshab Kumar - https://github.com/Keshabkjha -->
+```
+
+### WordPress Integration
+
+Add this HTML block to your WordPress page/post editor:
+
+```html
+<div class="skyscope-widget">
+  <iframe
+    src="https://skyscope-phi.vercel.app/?embed=1"
+    title="SkyScope Weather Assistant by Keshab Kumar"
+    width="100%"
+    height="700"
+    frameborder="0"
+    allow="geolocation; microphone"
+    sandbox="allow-scripts allow-same-origin allow-forms"
+    style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"
+  ></iframe>
+  <p style="text-align: center; font-size: 12px; color: #666; margin-top: 8px;">
+    Powered by <a href="https://github.com/Keshabkjha/SkyScope" target="_blank">SkyScope</a> 
+    by <a href="https://github.com/Keshabkjha" target="_blank">Keshab Kumar</a>
+  </p>
+</div>
+```
+
+### React Component
+
+```jsx
+import React from 'react';
+
+const SkyScopeWidget = ({ 
+  width = '450', 
+  height = '700', 
+  theme = 'light' 
+}) => {
+  return (
+    <div>
+      <iframe
+        src={`https://skyscope-phi.vercel.app/?embed=1&theme=${theme}`}
+        title="SkyScope Weather Assistant by Keshab Kumar"
+        width={width}
+        height={height}
+        frameBorder="0"
+        allow="geolocation; microphone"
+        sandbox="allow-scripts allow-same-origin allow-forms"
+        style={{
+          borderRadius: '12px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          border: 'none'
+        }}
+      />
+      <p style={{ textAlign: 'center', fontSize: '12px', color: '#666', marginTop: '8px' }}>
+        Powered by <a href="https://github.com/Keshabkjha/SkyScope" target="_blank" rel="noopener noreferrer">SkyScope</a> 
+        by <a href="https://github.com/Keshabkjha" target="_blank" rel="noopener noreferrer">Keshab Kumar</a>
+      </p>
+    </div>
+  );
+};
+
+export default SkyScopeWidget;
+```
+
+### Attribution Guidelines
+
+When embedding SkyScope, please include attribution to the creator:
+
+```html
+<!-- Simple attribution -->
+<p>Powered by <a href="https://github.com/Keshabkjha/SkyScope">SkyScope</a> by <a href="https://github.com/Keshabkjha">Keshab Kumar</a></p>
+
+<!-- Detailed attribution -->
+<div class="attribution">
+  <p>
+    <strong>Weather Assistant:</strong> 
+    <a href="https://github.com/Keshabkjha/SkyScope" target="_blank">SkyScope</a> 
+    - Created by <a href="https://github.com/Keshabkjha" target="_blank">Keshab Kumar</a>
+  </p>
+  <p style="font-size: 11px; color: #888;">
+    AI-powered weather intelligence platform
+  </p>
+</div>
+```
+
+### Get Featured!
+
+If you've integrated SkyScope into your project, we'd love to feature you!
+
+1. **Star the Repository**: Show your support ⭐
+2. **Share Your Project**: Create an issue with:
+   - Your project name and URL
+   - A brief description
+   - Screenshot or demo link
+   - How you're using SkyScope
+
+**Live Example:** See SkyScope in action at [ClimaSense](https://keshabkjha.github.io/ClimaSense/) - a weather dashboard that integrates SkyScope as an AI assistant.
+
+---
+
+## 🤝 Development Contributions
 
 We welcome contributions of all kinds, including:
 
@@ -250,14 +369,35 @@ Contributors are recognized in:
 
 ## 📞 Getting Help
 
-- **GitHub Discussions**: General questions and ideas
-- **Issues**: Bug reports and feature requests
-- **Email**: support@skyscope.dev (for maintainers)
+### Get Help
+
+- 📖 [Documentation](https://github.com/Keshabkjha/SkyScope#readme)
+- 🐛 [Report Issues](https://github.com/Keshabkjha/SkyScope/issues)
+- 💬 [Discussions](https://github.com/Keshabkjha/SkyScope/discussions)
+- 📧 Email: keshabkumarjha876@gmail.com
+
+### Connect with the Creator
+
+- 🌐 [GitHub](https://github.com/Keshabkjha)
+- 🌐 [Portfolio](https://linktr.ee/Keshabkjha)
+- 🌐 [Live Demo](https://skyscope-phi.vercel.app/)
 
 ## 📄 License
 
-By contributing to SkyScope, you agree that your contributions will be licensed under the [MIT License](LICENSE).
+By contributing to SkyScope, you agree that your contributions will be licensed under [MIT License](LICENSE).
+
+## 🙏 Acknowledgments
+
+### About the Creator
+
+**Keshab Kumar** is a passionate developer who created SkyScope to make weather intelligence accessible to everyone through AI-powered conversations.
+
+- 🎯 **Mission**: Democratizing weather intelligence through AI
+- 💡 **Vision**: Every application should have access to smart weather insights
+- 🌟 **Values**: Open source, community-driven, user-focused
 
 ---
 
-Thank you for contributing to SkyScope! Your contributions help make this project better for everyone. 🌟
+Thank you for contributing to or using SkyScope! Together we're making weather intelligence more accessible to everyone. 🌟
+
+*Created with ❤️ by [Keshab Kumar](https://github.com/Keshabkjha)*
